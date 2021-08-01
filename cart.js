@@ -11,6 +11,20 @@ function getCartItems () {
     })
 }
 
+function decreaseCount(itemId) {
+    let cartItem = db.collection("cart-items").doc(itemId);
+    cartItem.get()
+        .then( function (doc) {
+            if(doc.exists) {
+                if (doc.data().quantity > 1) {
+                    cartItem.update({
+                        quantity: doc.data().quantity - 1,
+                    })
+                }
+            }
+        })
+}
+
 function generateCartItems(cartItems) {
     let itemsHTML = "";
     cartItems.forEach((item) => {
@@ -26,13 +40,13 @@ function generateCartItems(cartItems) {
                 </div>
             </div>
             <div class="cart-item-counter w-48 flex items-center">
-                <div class="left-chevron cursor-pointer text-gray-400 bg-gray-100 rounded h-6 w-6 flex items-center justify-center hover:bg-gray-200 mr-2">
+                <div data-id="${item.id}" class="cart-item-decrease left-chevron cursor-pointer text-gray-400 bg-gray-100 rounded h-6 w-6 flex items-center justify-center hover:bg-gray-200 mr-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                     </svg>
                 </div>
                 <h4 class="text-gray-400">x${item.quantity}</h4>
-                <div class="left-chevron cursor-pointer text-gray-400 bg-gray-100 rounded h-6 w-6 flex items-center justify-center hover:bg-gray-200 ml-2">
+                <div data-id="${item.id}" class="cart-item-increase left-chevron cursor-pointer text-gray-400 bg-gray-100 rounded h-6 w-6 flex items-center justify-center hover:bg-gray-200 ml-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>
@@ -49,6 +63,18 @@ function generateCartItems(cartItems) {
     })
 
     document.querySelector('.cart-items').innerHTML = itemsHTML;
+    createEventListeners();
+}
+
+function createEventListeners() {
+    let decreaseButtons = document.querySelectorAll('.cart-item-decrease');
+    let increaseButtons = document.querySelectorAll('.cart-item-increase');
+    
+    decreaseButtons.forEach((button) => {
+        button.addEventListener('click', function() {
+            decreaseCount(button.dataset.id);
+        });
+    });
 }
 
 getCartItems();
