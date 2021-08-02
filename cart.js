@@ -8,6 +8,7 @@ function getCartItems () {
             })
         });
         generateCartItems(cartItems);
+        getTotalCost(cartItems);
     })
 }
 
@@ -24,6 +25,35 @@ function decreaseCount(itemId) {
             }
         })
 }
+
+
+function increaseCount(itemId) {
+    let cartItem = db.collection("cart-items").doc(itemId);
+    cartItem.get()
+        .then( function (doc) {
+            if(doc.exists) {
+                if (doc.data().quantity > 0) {
+                    cartItem.update({
+                        quantity: doc.data().quantity + 1,
+                    })
+                }
+            }
+        })
+}
+
+function deleteItem(itemId) {
+    db.collection("cart-items").doc(itemId).delete();
+}
+
+function getTotalCost(items) {
+    let totalCost = 0;
+    items.forEach((item) => {
+        totalCost += (item.price * item.quantity);
+    });
+
+    document.querySelector('.total-cost-value').innerText = numeral(totalCost).format('$0,0.00');
+}
+
 
 function generateCartItems(cartItems) {
     let itemsHTML = "";
@@ -52,8 +82,8 @@ function generateCartItems(cartItems) {
                     </svg>
                 </div>
             </div>
-            <div class="cart-item-total-cost w-48 font-bold text-gray-400">$${item.price * item.quantity}</div>
-            <div class="cart-item-delete w-10 font-bold text-gray-400 cursor-pointer hover:text-gray-500">
+            <div class="cart-item-total-cost w-48 font-bold text-gray-400">${numeral(item.price * item.quantity).format('$0,0.00')}</div>
+            <div data-id="${item.id}" class="cart-item-delete w-10 font-bold text-gray-400 cursor-pointer hover:text-gray-500">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -69,12 +99,26 @@ function generateCartItems(cartItems) {
 function createEventListeners() {
     let decreaseButtons = document.querySelectorAll('.cart-item-decrease');
     let increaseButtons = document.querySelectorAll('.cart-item-increase');
+
+    let deleteButtons = document.querySelectorAll('.cart-item-delete');
     
     decreaseButtons.forEach((button) => {
         button.addEventListener('click', function() {
             decreaseCount(button.dataset.id);
         });
     });
+
+    increaseButtons.forEach((button) => {
+        button.addEventListener('click', function() {
+            increaseCount(button.dataset.id);
+        });
+    });
+
+    deleteButtons.forEach((button) => {
+        button.addEventListener('click', function() {
+            deleteItem(button.dataset.id);
+        })
+    })
 }
 
 getCartItems();
